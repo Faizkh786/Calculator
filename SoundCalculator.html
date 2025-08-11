@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Sound Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .calculator {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 350px;
+            position: relative;
+        }
+
+        .sound-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .sound-indicator.on {
+            background: rgba(40, 167, 69, 0.8);
+        }
+
+        .sound-indicator.off {
+            background: rgba(220, 53, 69, 0.8);
+        }
+
+        .display {
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: right;
+            font-size: 2em;
+            font-weight: bold;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            overflow: hidden;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        button {
+            padding: 20px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s;
+        }
+
+        button:active::before {
+            width: 100px;
+            height: 100px;
+        }
+
+        .number {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .number:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .operator {
+            background: rgba(255, 193, 7, 0.8);
+            color: #333;
+        }
+
+        .operator:hover {
+            background: rgba(255, 193, 7, 1);
+            transform: translateY(-2px);
+        }
+
+        .equals {
+            background: rgba(40, 167, 69, 0.8);
+            color: white;
+        }
+
+        .equals:hover {
+            background: rgba(40, 167, 69, 1);
+            transform: translateY(-2px);
+        }
+
+        .clear {
+            background: rgba(220, 53, 69, 0.8);
+            color: white;
+        }
+
+        .clear:hover {
+            background: rgba(220, 53, 69, 1);
+            transform: translateY(-2px);
+        }
+
+        .span-2 {
+            grid-column: span 2;
+        }
+
+        .span-4 {
+            grid-column: span 4;
+        }
+
+        .history {
+            background: rgba(0, 0, 0, 0.2);
+            color: rgba(255, 255, 255, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            min-height: 20px;
+        }
+
+        .sound-toggle {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+
+        .sound-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        @media (max-width: 400px) {
+            .calculator {
+                width: 90%;
+                padding: 20px;
+            }
+            
+            button {
+                padding: 15px;
+                font-size: 1em;
+            }
+            
+            .display {
+                font-size: 1.5em;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="sound-indicator" id="soundIndicator">
+            🔊 Voice: <span id="soundStatus">ON</span>
+            <button class="sound-toggle" onclick="toggleSound()">Toggle</button>
+        </div>
+        <div class="history" id="history"></div>
+        <div class="display" id="display">0</div>
+        <div class="buttons">
+            <button class="clear" onclick="clearDisplay()">C</button>
+            <button class="operator" onclick="deleteLast()">⌫</button>
+            <button class="operator" onclick="addOperator('%')">%</button>
+            <button class="operator" onclick="addOperator('/')">÷</button>
+            
+            <button class="number" onclick="addNumber('7')">7</button>
+            <button class="number" onclick="addNumber('8')">8</button>
+            <button class="number" onclick="addNumber('9')">9</button>
+            <button class="operator" onclick="addOperator('*')">×</button>
+            
+            <button class="number" onclick="addNumber('4')">4</button>
+            <button class="number" onclick="addNumber('5')">5</button>
+            <button class="number" onclick="addNumber('6')">6</button>
+            <button class="operator" onclick="addOperator('-')">−</button>
+            
+            <button class="number" onclick="addNumber('1')">1</button>
+            <button class="number" onclick="addNumber('2')">2</button>
+            <button class="number" onclick="addNumber('3')">3</button>
+            <button class="operator" onclick="addOperator('+')">+</button>
+            
+            <button class="number span-2" onclick="addNumber('0')">0</button>
+            <button class="number" onclick="addDecimal()">.</button>
+            <button class="equals" onclick="calculate()">=</button>
+        </div>
+    </div>
+
+    <script>
+        let displayValue = '0';
+        let previousValue = null;
+        let operation = null;
+        let waitingForOperand = false;
+        let soundEnabled = true;
+        let audioContext = null;
+
+        const display = document.getElementById('display');
+        const history = document.getElementById('history');
+        const soundIndicator = document.getElementById('soundIndicator');
+        const soundStatus = document.getElementById('soundStatus');
+
+        // Initialize Web Audio API
+        function initAudio() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            } catch (e) {
+                console.log('Web Audio API not supported');
+                soundEnabled = false;
+                updateSoundIndicator();
+            }
+        }
+
+        function updateSoundIndicator() {
+            if (soundEnabled) {
+                soundIndicator.className = 'sound-indicator on';
+                soundStatus.textContent = 'ON';
+            } else {
+                soundIndicator.className = 'sound-indicator off';
+                soundStatus.textContent = 'OFF';
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            updateSoundIndicator();
+            if (soundEnabled && !audioContext) {
+                initAudio();
+            }
+        }
+
+        function playVoicePattern(frequencies, durations) {
+            if (!soundEnabled || !audioContext) return;
+
+            try {
+                let currentTime = audioContext.currentTime;
+                
+                frequencies.forEach((freq, index) => {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+
+                    oscillator.frequency.setValueAtTime(freq, currentTime);
+                    oscillator.type = 'sine';
+
+                    gainNode.gain.setValueAtTime(0.2, currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + durations[index] / 1000);
+
+                    oscillator.start(currentTime);
+                    oscillator.stop(currentTime + durations[index] / 1000);
+
+                    currentTime += durations[index] / 1000 + 0.05; // 50ms pause between sounds
+                });
+            } catch (e) {
+                console.log('Error playing voice pattern:', e);
+            }
+        }
+
+        function playButtonVoice(buttonType, value = '') {
+            switch (buttonType) {
+                case 'number_0':
+                    playVoicePattern([262, 330, 392], [100, 100, 150]); // "Zero"
+                    break;
+                case 'number_1':
+                    playVoicePattern([330, 392, 440], [100, 100, 150]); // "One"
+                    break;
+                case 'number_2':
+                    playVoicePattern([392, 440, 494], [100, 100, 150]); // "Two"
+                    break;
+                case 'number_3':
+                    playVoicePattern([440, 494, 523], [100, 100, 150]); // "Three"
+                    break;
+                case 'number_4':
+                    playVoicePattern([494, 523, 587], [100, 100, 150]); // "Four"
+                    break;
+                case 'number_5':
+                    playVoicePattern([523, 587, 659], [100, 100, 150]); // "Five"
+                    break;
+                case 'number_6':
+                    playVoicePattern([587, 659, 698], [100, 100, 150]); // "Six"
+                    break;
+                case 'number_7':
+                    playVoicePattern([659, 698, 784], [100, 100, 150]); // "Seven"
+                    break;
+                case 'number_8':
+                    playVoicePattern([698, 784, 880], [100, 100, 150]); // "Eight"
+                    break;
+                case 'number_9':
+                    playVoicePattern([784, 880, 988], [100, 100, 150]); // "Nine"
+                    break;
+                case 'operator_plus':
+                    playVoicePattern([440, 523, 659], [120, 120, 200]); // "Plus"
+                    break;
+                case 'operator_minus':
+                    playVoicePattern([523, 659, 784], [120, 120, 200]); // "Minus"
+                    break;
+                case 'operator_multiply':
+                    playVoicePattern([659, 784, 880], [120, 120, 200]); // "Multiply"
+                    break;
+                case 'operator_divide':
+                    playVoicePattern([784, 880, 988], [120, 120, 200]); // "Divide"
+                    break;
+                case 'operator_percent':
+                    playVoicePattern([880, 988, 1047], [120, 120, 200]); // "Percent"
+                    break;
+                case 'equals':
+                    playVoicePattern([523, 659, 784, 1047], [100, 100, 100, 300]); // "Equals"
+                    break;
+                case 'clear':
+                    playVoicePattern([200, 150, 100], [200, 200, 300]); // "Clear"
+                    break;
+                case 'delete':
+                    playVoicePattern([300, 250, 200], [150, 150, 200]); // "Delete"
+                    break;
+                case 'decimal':
+                    playVoicePattern([550, 659, 784], [100, 100, 150]); // "Decimal"
+                    break;
+            }
+        }
+
+        function updateDisplay() {
+            display.textContent = displayValue;
+        }
+
+        function addNumber(num) {
+            playButtonVoice('number_' + num);
+            if (waitingForOperand) {
+                displayValue = num;
+                waitingForOperand = false;
+            } else {
+                displayValue = displayValue === '0' ? num : displayValue + num;
+            }
+            updateDisplay();
+        }
+
+        function addDecimal() {
+            playButtonVoice('decimal');
+            if (waitingForOperand) {
+                displayValue = '0.';
+                waitingForOperand = false;
+            } else if (displayValue.indexOf('.') === -1) {
+                displayValue += '.';
+            }
+            updateDisplay();
+        }
+
+        function addOperator(op) {
+            let voiceType = '';
+            switch (op) {
+                case '+': voiceType = 'operator_plus'; break;
+                case '-': voiceType = 'operator_minus'; break;
+                case '*': voiceType = 'operator_multiply'; break;
+                case '/': voiceType = 'operator_divide'; break;
+                case '%': voiceType = 'operator_percent'; break;
+            }
+            playButtonVoice(voiceType);
+            
+            const inputValue = parseFloat(displayValue);
+
+            if (previousValue === null) {
+                previousValue = inputValue;
+            } else if (operation) {
+                const result = performCalculation(previousValue, inputValue, operation);
+                displayValue = String(result);
+                previousValue = result;
+            }
+
+            waitingForOperand = true;
+            operation = op;
+            updateDisplay();
+        }
+
+        function performCalculation(firstValue, secondValue, operation) {
+            switch (operation) {
+                case '+':
+                    return firstValue + secondValue;
+                case '-':
+                    return firstValue - secondValue;
+                case '*':
+                    return firstValue * secondValue;
+                case '/':
+                    return firstValue / secondValue;
+                case '%':
+                    return firstValue % secondValue;
+                default:
+                    return secondValue;
+            }
+        }
+
+        function calculate() {
+            if (previousValue === null || operation === null) {
+                return;
+            }
+
+            playButtonVoice('equals');
+            const inputValue = parseFloat(displayValue);
+            const result = performCalculation(previousValue, inputValue, operation);
+            
+            // Update history
+            const historyText = `${previousValue} ${getOperationSymbol(operation)} ${inputValue} = ${result}`;
+            history.textContent = historyText;
+            
+            displayValue = String(result);
+            previousValue = null;
+            operation = null;
+            waitingForOperand = true;
+            updateDisplay();
+        }
+
+        function getOperationSymbol(op) {
+            switch (op) {
+                case '+': return '+';
+                case '-': return '−';
+                case '*': return '×';
+                case '/': return '÷';
+                case '%': return '%';
+                default: return op;
+            }
+        }
+
+        function clearDisplay() {
+            playButtonVoice('clear');
+            displayValue = '0';
+            previousValue = null;
+            operation = null;
+            waitingForOperand = false;
+            history.textContent = '';
+            updateDisplay();
+        }
+
+        function deleteLast() {
+            playButtonVoice('delete');
+            if (displayValue.length === 1) {
+                displayValue = '0';
+            } else {
+                displayValue = displayValue.slice(0, -1);
+            }
+            updateDisplay();
+        }
+
+        // Initialize audio and sound indicator
+        initAudio();
+        updateSoundIndicator();
+
+        // Keyboard support
+        document.addEventListener('keydown', function(event) {
+            const key = event.key;
+            
+            if (key >= '0' && key <= '9') {
+                addNumber(key);
+            } else if (key === '.') {
+                addDecimal();
+            } else if (key === '+' || key === '-') {
+                addOperator(key);
+            } else if (key === '*') {
+                addOperator('*');
+            } else if (key === '/') {
+                event.preventDefault();
+                addOperator('/');
+            } else if (key === '%') {
+                addOperator('%');
+            } else if (key === 'Enter' || key === '=') {
+                calculate();
+            } else if (key === 'Escape') {
+                clearDisplay();
+            } else if (key === 'Backspace') {
+                deleteLast();
+            } else if (key === 'm' || key === 'M') {
+                toggleSound();
+            }
+        });
+
+        // Add click sound to all buttons
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', function() {
+                // Visual feedback is already handled by CSS
+            });
+        });
+    </script>
+</body>
+</html>
